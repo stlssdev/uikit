@@ -1,0 +1,34 @@
+#!/usr/bin/env sh
+set -e
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  @stlssdev/uikit — quality-gate"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+echo ""
+echo "➤ 1/4  Format …"
+if pnpm run check:format:staged; then
+  echo "  ✅ oxfmt — staged files look good"
+else
+  echo "  ❌ oxfmt — run \`pnpm format\`, stage fixes, and try again"
+  exit 1
+fi
+
+echo ""
+echo "➤ 2/4  TypeScript …"
+if pnpm typecheck; then
+  echo "  ✅ tsc --noEmit passed"
+else
+  echo "  ❌ Typecheck failed — fix errors above"
+  exit 1
+fi
+
+echo ""
+echo "➤ 3/4  Lint …"
+if pnpm run check:lint:staged; then
+  echo "  ✅ oxlint — staged files look good"
+else
+  echo "  ❌ oxlint — run \`pnpm lint:fix\`, review, stage, and try again"
+  exit 1
+fi
