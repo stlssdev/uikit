@@ -1,0 +1,5 @@
+# Copy to .npmrc only if your org requires a custom registry.
+# Public @stlssdev packages on https://registry.npmjs.org/ need no project .npmrc.
+
+# registry=https://registry.npmjs.org/
+# @stlssdev:registry=https://registry.npmjs.org/

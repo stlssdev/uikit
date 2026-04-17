@@ -1,0 +1,5 @@
+/**
+ * Public stylesheet entry: every component sheet used at runtime should be
+ * listed here so `pnpm build` emits a single `dist/style.css`.
+ */
+@import "./Button.css";

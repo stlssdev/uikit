@@ -1,0 +1,59 @@
+.stlss-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.25;
+  border-radius: 0.375rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.stlss-btn:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.stlss-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.stlss-btn--primary {
+  color: #fff;
+  background-color: #111827;
+  border-color: #111827;
+}
+
+.stlss-btn--primary:hover:not(:disabled) {
+  background-color: #1f2937;
+  border-color: #1f2937;
+}
+
+.stlss-btn--secondary {
+  color: #111827;
+  background-color: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+.stlss-btn--secondary:hover:not(:disabled) {
+  background-color: #e5e7eb;
+}
+
+.stlss-btn--ghost {
+  color: #111827;
+  background-color: transparent;
+  border-color: transparent;
+}
+
+.stlss-btn--ghost:hover:not(:disabled) {
+  background-color: #f3f4f6;
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["import", "typescript", "react", "react-perf"],
+  "env": {
+    "builtin": true,
+    "es2024": true
+  },
+  "globals": {
+    "React": "readonly"
+  },
+  "rules": {
+    "eslint/no-console": "warn"
+  },
+  "ignorePatterns": ["dist", "storybook-static", "node_modules"]
+}

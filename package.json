@@ -1,0 +1,72 @@
+{
+  "name": "@stlssdev/uikit",
+  "version": "0.0.1",
+  "description": "React UI components from stlssdev",
+  "keywords": [
+    "components",
+    "react",
+    "uikit"
+  ],
+  "homepage": "https://github.com/stlssdev/uikit#readme",
+  "bugs": {
+    "url": "https://github.com/stlssdev/uikit/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stlssdev/uikit.git"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "dist/style.css"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup && npm run build:styles",
+    "build:styles": "esbuild src/styles.css --bundle --outfile=dist/style.css",
+    "prepublishOnly": "npm run build",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint . --fix",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "devDependencies": {
+    "@storybook/addon-docs": "^9.0.0",
+    "@storybook/react-vite": "^9.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "esbuild": "^0.25.0",
+    "oxfmt": "^0.45.0",
+    "oxlint": "^1.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "storybook": "^9.0.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  }
+}
