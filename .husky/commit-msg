@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+set -e
+
+echo ""
+echo "➤ 4/4 Commitlint (Conventional Commits) …"
+if pnpm exec commitlint --edit "$1"; then
+  echo "  ✅ commitlint passed"
+else
+  echo "  ❌ commitlint failed — use prefixes like feat:, fix:, docs:, chore:"
+  exit 1
+fi
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  ✅✅ All gates passed — creating commit"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

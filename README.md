@@ -23,17 +23,17 @@ Component CSS is bundled from a single manifest, [`src/styles.css`](src/styles.c
 Import the stylesheet once in your app (e.g. your root layout or entry file):
 
 ```ts
-import '@stlssdev/uikit/style.css';
+import "@stlssdev/uikit/style.css";
 ```
 
 ## Usage
 
 ```tsx
-import { Button } from '@stlssdev/uikit';
+import { Button } from "@stlssdev/uikit";
 
 export function Example() {
   return (
-    <Button variant="primary" type="button" onClick={() => console.log('clicked')}>
+    <Button variant="primary" type="button" onClick={() => console.log("clicked")}>
       Save
     </Button>
   );
@@ -59,19 +59,19 @@ pnpm check    # format (check) + oxlint + TypeScript
 pnpm build    # dist/ + dist/style.css
 ```
 
-## Publish to npm (v0.0.1)
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for **Husky**, **Conventional Commits**, **Changesets**, and release workflow.
 
-1. Ensure you are logged in: `npm whoami`
-2. For the `@stlssdev` scope, your npm user must belong to the **stlssdev** org (or you must use the correct org name).
-3. `package.json` includes `"publishConfig": { "access": "public" }` for a public scoped package.
-4. From this directory:
+## Publish to npm
+
+1. Log in: `npm whoami` and ensure access to the `@stlssdev` scope.
+2. Record changes with **Changesets** (`pnpm changeset`), then `pnpm version-packages` to bump the version and update **CHANGELOG.md**.
+3. From this directory:
 
 ```bash
-pnpm build
-npm publish
+pnpm release
 ```
 
-`prepublishOnly` runs `pnpm build` automatically before publish.
+`pnpm release` runs `pnpm build` then `changeset publish`. The `prepare` script uses **`husky || exit 0`** so installing this package as a dependency does not fail when the `husky` binary is not present (it only runs fully in this repo after `pnpm install`).
 
 ### Optional `.npmrc`
 
