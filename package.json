@@ -1,6 +1,6 @@
 {
   "name": "@stlssdev/uikit",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "React UI components from stlssdev",
   "keywords": [
     "components",
@@ -41,6 +41,10 @@
     "build": "tsup && esbuild src/styles.css --bundle --outfile=dist/style.css",
     "storybook": "storybook dev -p 6006",
     "validate": "oxfmt --check . && tsc --noEmit && oxlint . && pnpm build && storybook build",
+    "format": "oxfmt --write .",
+    "check-format": "oxfmt --check .",
+    "check-lint": "oxlint .",
+    "check-types": "tsc --noEmit",
     "prepare-release": "node scripts/changeset-from-git.mjs && changeset version",
     "release": "changeset publish",
     "prepublishOnly": "pnpm run build",
