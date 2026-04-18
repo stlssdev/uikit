@@ -8,16 +8,16 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 
 echo ""
 echo "➤ 1/4  Format …"
-if pnpm run check:format:staged; then
+if pnpm exec lint-staged --config .lintstagedrc.format.json; then
   echo "  ✅ oxfmt — staged files look good"
 else
-  echo "  ❌ oxfmt — run \`pnpm format\`, stage fixes, and try again"
+  echo "  ❌ oxfmt — run \`pnpm exec oxfmt .\`, stage fixes, and try again"
   exit 1
 fi
 
 echo ""
 echo "➤ 2/4  TypeScript …"
-if pnpm typecheck; then
+if pnpm exec tsc --noEmit; then
   echo "  ✅ tsc --noEmit passed"
 else
   echo "  ❌ Typecheck failed — fix errors above"
@@ -26,9 +26,9 @@ fi
 
 echo ""
 echo "➤ 3/4  Lint …"
-if pnpm run check:lint:staged; then
+if pnpm exec lint-staged --config .lintstagedrc.lint.json; then
   echo "  ✅ oxlint — staged files look good"
 else
-  echo "  ❌ oxlint — run \`pnpm lint:fix\`, review, stage, and try again"
+  echo "  ❌ oxlint — run \`pnpm exec oxlint . --fix\`, review, stage, and try again"
   exit 1
 fi
