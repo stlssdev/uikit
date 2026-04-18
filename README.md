@@ -64,7 +64,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for **Husky**, **Conventional Commits**
 ## Publish to npm
 
 1. Log in: `npm whoami` and ensure access to the `@stlssdev` scope.
-2. Record changes with **Changesets** (`pnpm exec changeset`), then merge them to **`main`**. CI validates; **GitHub Actions** opens a **version** PR and, after you merge it, **publishes to npm** and creates a **GitHub Release** (see [CONTRIBUTING.md](./CONTRIBUTING.md#automated-recommended-github-actions--changesets)).
+2. Record changes with **Changesets** (`pnpm exec changeset`), then merge them to **`main`**. CI validates; **GitHub Actions** opens a **version** PR and, after you merge it, **publishes to npm** (via **Trusted Publishing / OIDC** — no `NPM_TOKEN` in GitHub) and creates a **GitHub Release** (see [CONTRIBUTING.md](./CONTRIBUTING.md#automated-recommended-github-actions--changesets)).
 3. **Manual publish** from this directory (after **`pnpm exec changeset version`** if you are not using the version PR):
 
 ```bash

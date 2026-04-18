@@ -37,15 +37,24 @@ Use [Conventional Commits](https://www.conventionalcommits.org/), for example:
 On every push to **`main`**, [`.github/workflows/release.yml`](.github/workflows/release.yml) runs [`changesets/action`](https://github.com/changesets/action):
 
 1. If there are **pending changeset files** (`.changeset/*.md`), it opens a PR titled **“chore: release package”** that bumps **`package.json`** and updates **`CHANGELOG.md`** (you merge that PR).
-2. After that merge, when there are **no** pending changesets but the version on `main` is **not yet published**, it runs **`pnpm validate && changeset publish`**, publishes to **npm**, and creates a **GitHub Release** (`createGithubReleases: true`). Provenance is enabled via **`NPM_CONFIG_PROVENANCE`**.
+2. After that merge, when there are **no** pending changesets but the version on `main` is **not yet published**, it runs **`pnpm validate && changeset publish`**, publishes to **npm** using **Trusted Publishing (OIDC)**, and creates a **GitHub Release** (`createGithubReleases: true`). For public packages published from a **public** GitHub repo, npm also records **provenance** automatically when using Trusted Publishing ([npm docs](https://docs.npmjs.com/trusted-publishers)).
 
-**Repository secrets** (Settings → Secrets and variables → Actions):
+**CI auth:** the workflow **does not** use **`NPM_TOKEN`**. Publishing relies on **GitHub Actions OIDC** + the **Trusted Publisher** link configured on npm for this repo and [`.github/workflows/release.yml`](.github/workflows/release.yml).
 
-| Secret      | Purpose                                                                                                                               |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `NPM_TOKEN` | Granular npm access token with **publish** permission for `@stlssdev/uikit` (automation-style token; bypasses interactive OTP in CI). |
+**One-time npm setup (package owner):** open **Package access** → **Trusted publishing** for [`@stlssdev/uikit`](https://www.npmjs.com/package/@stlssdev/uikit/access), choose **GitHub Actions**, then set:
 
-`GITHUB_TOKEN` is supplied by Actions; the workflow sets **`contents:write`**, **`pull-requests:write`**, and **`id-token:write`** (for npm provenance).
+| Field                | Value                                                                                                                                                                            |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Organization or user | **`stlssdev`** (GitHub owner; must match `repository.url` in `package.json`)                                                                                                     |
+| Repository           | **`uikit`**                                                                                                                                                                      |
+| Workflow filename    | **`release.yml`** (exact name under `.github/workflows/`)                                                                                                                        |
+| Environment name     | _(leave empty unless you add a matching [GitHub Environment](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment))_ |
+
+Click **Set up connection**, complete any **OTP / login** prompts in the browser, then save.
+
+**GitHub:** no **`NPM_TOKEN`** secret is required for CI publish. You may remove an old **`NPM_TOKEN`** repository secret after a successful OIDC publish.
+
+`GITHUB_TOKEN` is supplied by Actions; the workflow sets **`contents:write`**, **`pull-requests:write`**, and **`id-token:write`** (required for OIDC).
 
 **Day-to-day:** merge features to `main`, then run **`pnpm exec changeset`** on a branch (or locally and push), open a PR with the new `.changeset/*.md`, merge it. The release workflow then opens the **version** PR; merge that. The next workflow run **publishes** and creates the GitHub release.
 
@@ -111,14 +120,9 @@ pnpm exec changeset publish --otp 123456
 
 #### Full automation (CI / no human OTP)
 
-Create a **granular access token** on npm ([Access Tokens](https://www.npmjs.com/settings/~/tokens)) with **Publish** for `@stlssdev/uikit` (or the org) and permission to **bypass 2FA** when npm allows it for that token type. Store it as a **GitHub Actions secret** (e.g. `NPM_TOKEN`) and set before publish:
+CI uses **Trusted Publishing** (see above): **no long-lived publish token** in GitHub. After OIDC publishes succeed, you can tighten npm **Publishing access** to **“Require two-factor authentication and disallow tokens”** if you want token-based publishes disabled ([npm migration tip](https://docs.npmjs.com/trusted-publishers)).
 
-```bash
-npm config set //registry.npmjs.org/:_authToken="${NPM_TOKEN}"
-pnpm exec changeset publish
-```
-
-Exact token capabilities depend on npm’s current policy; prefer **automation**-oriented tokens for CI. If the CLI session is wrong, run **`npm login`** again (or set `//registry.npmjs.org/:_authToken` in `~/.npmrc` from a token you created on npmjs.com).
+If you ever add **private npm dependencies**, use a **read-only** granular token only for `pnpm install` in CI (publish still uses OIDC); see [npm docs — private dependencies](https://docs.npmjs.com/trusted-publishers).
 
 - Do not use **`npm publish --ignore-scripts`** unless you mean to: it skips **`prepublishOnly`**, so you can publish without rebuilding (risky if the tarball was built elsewhere).
 

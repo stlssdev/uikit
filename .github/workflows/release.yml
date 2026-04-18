@@ -18,10 +18,8 @@ jobs:
   release:
     name: Version PR or publish to npm
     runs-on: ubuntu-latest
-    env:
-      NPM_CONFIG_PROVENANCE: "true"
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    # Trusted Publishing (OIDC): no NPM_TOKEN. Requires npm ≥ 11.5.1 + Node ≥ 22.14
+    # and Trusted Publisher configured on npm for this repo + workflow file `release.yml`.
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,10 +32,28 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
           registry-url: https://registry.npmjs.org
-          always-auth: true
+
+      # pnpm publish shells out to the npm CLI; OIDC requires npm ≥ 11.5.1 (npm docs).
+      - name: Upgrade global npm for OIDC
+        run: npm install -g npm@^11.6.0
+
+      - name: Verify npm (Trusted Publishing)
+        run: |
+          node <<'NODE'
+          const { execSync } = require('node:child_process');
+          const ver = execSync('npm --version', { encoding: 'utf8' }).trim();
+          const parts = ver.split('.').map((x) => Number(x));
+          const [maj, min, pat] = [parts[0] || 0, parts[1] || 0, parts[2] || 0];
+          const ok = maj > 11 || (maj === 11 && (min > 5 || (min === 5 && pat >= 1)));
+          if (!ok) {
+            console.error('npm must be >= 11.5.1 for Trusted Publishing, got:', ver);
+            process.exit(1);
+          }
+          console.log('npm', ver, 'OK for OIDC publish');
+          NODE
 
       - name: Install
         run: pnpm install --frozen-lockfile
