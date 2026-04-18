@@ -1,12 +1,13 @@
 # Changelog
 
-## 0.1.0
+## 0.1.1
 
 ### Minor Changes
 
 - Summary generated from git commit subjects.
 
-  Range: v0.0.2..HEAD
+  Range: v0.0.1..HEAD
+  - feat: update github workflow (53c8b3a)
   - feat: update workflow (4188a49)
   - feat: update workflow (b7b5210)
 
