@@ -1,5 +1,6 @@
 # Changesets
 
-Run `pnpm changeset` after a user-facing change to record a semver bump intent. Before release, run `pnpm version-packages` to apply versions and update the changelog, then publish.
+- **Draft from git:** `pnpm changeset:from-git` (optional `--since <ref>`, `--bump patch|minor|major`, `--max N`). Writes `.changeset/git-<id>.md` from commit subjects. Review before commit.
+- **Interactive wizard:** `pnpm exec changeset`.
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md).
+`CHANGELOG.md` is updated **automatically** when versions are applied (`changeset version` / version PR), not by the git script. See [CONTRIBUTING.md](../CONTRIBUTING.md).

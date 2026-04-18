@@ -63,15 +63,22 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for **Husky**, **Conventional Commits**
 
 ## Publish to npm
 
-1. Log in: `npm whoami` and ensure access to the `@stlssdev` scope.
-2. Record changes with **Changesets** (`pnpm exec changeset`), then merge them to **`main`**. CI validates; **GitHub Actions** opens a **version** PR and, after you merge it, **publishes to npm** (via **Trusted Publishing / OIDC** — no `NPM_TOKEN` in GitHub) and creates a **GitHub Release** (see [CONTRIBUTING.md](./CONTRIBUTING.md#automated-recommended-github-actions--changesets)).
-3. **Manual publish** from this directory (after **`pnpm exec changeset version`** if you are not using the version PR):
+Releases are **tag-gated** and published from **GitHub Actions** (Trusted Publishing / OIDC — no **`NPM_TOKEN`** in GitHub). Maintainer flow:
+
+1. On a branch from **`main`**, run **`pnpm prepare-release`** (draft changeset from git + **`changeset version`**), adjust **`.changeset/*.md`** if needed (or run **`node scripts/changeset-from-git.mjs`** then **`pnpm exec changeset version`**), then PR and merge **`package.json`** / **`CHANGELOG.md`** to **`main`**.
+2. Push a semver tag **`vX.Y.Z`** that matches **`package.json`**, approve the **`npm`** environment deployment, and CI runs **`changeset publish`** plus a **GitHub Release**.
+
+See [CONTRIBUTING.md — Releases and changelog](./CONTRIBUTING.md#releases-and-changelog) for the full checklist (environment setup, reruns, troubleshooting).
+
+**Emergency local publish** (not recommended vs CI):
 
 ```bash
 pnpm release
 ```
 
-`pnpm release` runs **`changeset publish`**; **`prepublishOnly`** runs **`pnpm build`** before pack. If npm **2FA** causes an immediate **401**, use **`pnpm release:otp`** — it **prompts for your OTP**, then publishes. See [CONTRIBUTING.md](CONTRIBUTING.md#interactive-otp-recommended-locally). The `prepare` script uses **`husky || exit 0`** so installing this package as a dependency does not fail when the `husky` binary is not present (it only runs fully in this repo after `pnpm install`).
+**`pnpm release`** runs **`changeset publish`**; **`prepublishOnly`** runs **`pnpm build`** before pack. With npm **2FA**, use **`pnpm exec changeset publish --otp …`** — see [Publishing & npm troubleshooting](./CONTRIBUTING.md#publishing--npm-troubleshooting).
+
+The **`prepare`** script uses **`husky || exit 0`** so installing this package as a dependency does not fail when the **`husky`** binary is not present (it only runs fully in this repo after **`pnpm install`**).
 
 ### Optional `.npmrc`
 

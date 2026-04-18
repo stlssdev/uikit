@@ -2,28 +2,60 @@ name: Release
 
 on:
   push:
-    branches: [main]
+    tags:
+      - "v*.*.*"
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing semver tag to publish from (e.g. v1.2.3). Use after fixing a failed publish."
+        required: true
+        type: string
 
 concurrency:
-  group: release-${{ github.workflow }}-${{ github.ref }}
+  group: release-${{ github.workflow }}-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
   cancel-in-progress: false
 
 permissions:
   contents: write
-  pull-requests: write
   id-token: write
 
 jobs:
-  release:
-    name: Version PR or publish to npm
+  checks:
+    name: Validate release ref
     runs-on: ubuntu-latest
-    # Trusted Publishing (OIDC): no NPM_TOKEN. Requires npm ≥ 11.5.1 + Node ≥ 22.14
-    # and Trusted Publisher configured on npm for this repo + workflow file `release.yml`.
+    outputs:
+      release_tag: ${{ steps.meta.outputs.release_tag }}
+      checkout_ref: ${{ steps.meta.outputs.checkout_ref }}
     steps:
+      - name: Resolve ref and tag
+        id: meta
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+          REF: ${{ github.ref }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            TAG="${INPUT_TAG#refs/tags/}"
+            if [[ "$TAG" != v* ]]; then
+              TAG="v${TAG}"
+            fi
+            if ! echo "$TAG" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+              echo "Tag must look like v1.2.3 (no prerelease suffix in this workflow)."
+              exit 1
+            fi
+            CHECKOUT_REF="refs/tags/$TAG"
+          else
+            TAG="$REF_NAME"
+            CHECKOUT_REF="$REF"
+          fi
+          echo "release_tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "checkout_ref=$CHECKOUT_REF" >> "$GITHUB_OUTPUT"
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ steps.meta.outputs.checkout_ref }}
           fetch-depth: 0
 
       - name: Setup pnpm
@@ -36,7 +68,56 @@ jobs:
           cache: pnpm
           registry-url: https://registry.npmjs.org
 
-      # pnpm publish shells out to the npm CLI; OIDC requires npm ≥ 11.5.1 (npm docs).
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify tag matches package.json version
+        env:
+          RELEASE_TAG: ${{ steps.meta.outputs.release_tag }}
+        run: |
+          node <<'NODE'
+          const { readFileSync } = require('node:fs');
+          const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+          const tag = process.env.RELEASE_TAG || '';
+          const fromTag = tag.startsWith('v') ? tag.slice(1) : tag;
+          if (!/^\d+\.\d+\.\d+$/.test(fromTag)) {
+            console.error('Invalid release tag:', tag);
+            process.exit(1);
+          }
+          if (pkg.version !== fromTag) {
+            console.error(
+              `Mismatch: package.json version is "${pkg.version}" but tag is "${tag}" (expected v${pkg.version}).`,
+            );
+            process.exit(1);
+          }
+          console.log('OK: tag', tag, 'matches package.json version', pkg.version);
+          NODE
+
+      - name: Validate
+        run: pnpm validate
+
+  publish:
+    name: Publish to npm and GitHub Release
+    needs: checks
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.checks.outputs.checkout_ref }}
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
       - name: Upgrade global npm for OIDC
         run: npm install -g npm@^11.6.0
 
@@ -58,13 +139,18 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      - name: Create release PR or publish
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          publish: pnpm validate && changeset publish
-          commit: "chore: release package"
-          title: "chore: release package"
-          createGithubReleases: true
+      - name: Publish to npm (OIDC)
+        run: pnpm exec changeset publish
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"
+
+      - name: GitHub Release
+        env:
+          RELEASE_TAG: ${{ needs.checks.outputs.release_tag }}
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "GitHub Release $RELEASE_TAG already exists; skipping create (safe for re-runs)."
+          else
+            gh release create "$RELEASE_TAG" --repo "${{ github.repository }}" --generate-notes --verify-tag
+          fi

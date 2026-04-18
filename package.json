@@ -40,11 +40,10 @@
   "scripts": {
     "build": "tsup && esbuild src/styles.css --bundle --outfile=dist/style.css",
     "storybook": "storybook dev -p 6006",
-    "validate": "oxfmt --check . && oxlint . && tsc --noEmit && pnpm build && storybook build",
+    "validate": "oxfmt --check . && tsc --noEmit && oxlint . && pnpm build && storybook build",
+    "prepare-release": "node scripts/changeset-from-git.mjs && changeset version",
     "release": "changeset publish",
-    "release:otp": "node scripts/publish-with-otp.mjs",
     "prepublishOnly": "pnpm run build",
-    "version-packages": "changeset version",
     "prepare": "husky || exit 0"
   },
   "devDependencies": {
